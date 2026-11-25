@@ -1,0 +1,12 @@
+{
+    "name": "Lapor Bersih Kampus",
+    "short_name": "Lapor Bersih",
+    "description": "Sistem Pelaporan Kebersihan Kampus",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f5f7f5",
+    "theme_color": "#198754",
+    "lang": "id"
+}
