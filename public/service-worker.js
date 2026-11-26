@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lapor-bersih-kampus-v2';
+const CACHE_NAME = 'lapor-bersih-kampus-v3';
 
 const OFFLINE_URL = '/offline.html';
 
@@ -44,7 +44,11 @@ self.addEventListener('activate', event => {
 
                     cacheNames.map(cacheName => {
 
-                        if (cacheName !== CACHE_NAME) {
+                        // Hapus cache versi lama milik aplikasi ini.
+                        if (
+                            cacheName.startsWith('lapor-bersih-kampus-') &&
+                            cacheName !== CACHE_NAME
+                        ) {
                             return caches.delete(cacheName);
                         }
 
@@ -95,7 +99,19 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // File statis: gunakan cache jika tersedia.
+    // Hanya cache file statis.
+    const jenisFileStatis = [
+        'script',
+        'style',
+        'image',
+        'font'
+    ];
+
+    if (!jenisFileStatis.includes(request.destination)) {
+        return;
+    }
+
+    // Gunakan cache jika tersedia.
     event.respondWith(
 
         caches.match(request)

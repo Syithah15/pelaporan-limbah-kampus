@@ -38,6 +38,7 @@ class SinkronisasiController extends BaseController
             'deskripsi' => 'required|min_length[10]',
             'latitude' => 'required|decimal',
             'longitude' => 'required|decimal',
+            'akurasi_gps' => 'permit_empty|decimal|greater_than_equal_to[0]|less_than_equal_to[999999.99]',
         ];
 
         if (!$this->validate($aturan)) {
@@ -97,6 +98,17 @@ class SinkronisasiController extends BaseController
             );
         }
 
+        // Ambil akurasi GPS.
+        // Jika kosong, simpan sebagai NULL.
+        $akurasiInput = $this->request->getPost('akurasi_gps');
+
+        $akurasiGps = (
+            $akurasiInput !== null &&
+            trim((string) $akurasiInput) !== ''
+        )
+            ? (float) $akurasiInput
+            : null;
+
         $namaLokasi = trim(strip_tags(
             (string) $this->request->getPost('nama_lokasi')
         ));
@@ -147,7 +159,8 @@ class SinkronisasiController extends BaseController
                 'laporan_id' => $laporanId,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
-                'nama_lokasi' => $namaLokasi
+                'nama_lokasi' => $namaLokasi,
+                'akurasi_gps' => $akurasiGps
             ]);
 
             $riwayatModel->insert([
@@ -176,6 +189,7 @@ class SinkronisasiController extends BaseController
             );
 
         } catch (\Throwable $e) {
+
             $db->transRollback();
 
             $pathFoto = $folderUpload . $namaFile;

@@ -26,14 +26,14 @@ class LaporanController extends BaseController
 
     public function store()
     {
-        // Validasi data laporan
         $rules = [
             'judul' => 'required|min_length[5]|max_length[150]',
             'kategori' => 'required|in_list[Sampah,Saluran Air,Toilet,Ruang Kelas,Lingkungan,Lainnya]',
             'deskripsi' => 'required|min_length[10]',
             'foto' => 'uploaded[foto]|is_image[foto]|max_size[foto,2048]',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'latitude' => 'required|decimal',
+            'longitude' => 'required|decimal',
+            'akurasi_gps' => 'permit_empty|decimal|greater_than_equal_to[0]|less_than_equal_to[999999.99]',
         ];
 
         if (!$this->validate($rules)) {
@@ -42,11 +42,18 @@ class LaporanController extends BaseController
                 ->with('errors', $this->validator->getErrors());
         }
 
-        // Mengambil koordinat
         $latitude = (float) $this->request->getPost('latitude');
         $longitude = (float) $this->request->getPost('longitude');
 
-        // Memastikan koordinat berada dalam rentang yang valid
+        $akurasiInput = $this->request->getPost('akurasi_gps');
+
+        $akurasiGps = (
+            $akurasiInput !== null &&
+            trim((string) $akurasiInput) !== ''
+        )
+            ? (float) $akurasiInput
+            : null;
+
         if (
             $latitude < -90 || $latitude > 90 ||
             $longitude < -180 || $longitude > 180
@@ -56,28 +63,22 @@ class LaporanController extends BaseController
                 ->with('error', 'Koordinat lokasi tidak valid.');
         }
 
-        // Mengambil nama lokasi
         $namaLokasi = trim(
             strip_tags((string) $this->request->getPost('nama_lokasi'))
         );
 
-        // Membatasi nama lokasi maksimal 150 karakter
-        if ($namaLokasi !== '') {
-            $namaLokasi = mb_substr($namaLokasi, 0, 150);
-        } else {
-            $namaLokasi = null;
-        }
+        $namaLokasi = $namaLokasi !== ''
+            ? mb_substr($namaLokasi, 0, 150)
+            : null;
 
-        // Mengambil file foto
         $foto = $this->request->getFile('foto');
 
-        if (!$foto || !$foto->isValid()) {
+        if (!$foto || !$foto->isValid() || $foto->hasMoved()) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Foto tidak valid atau gagal diunggah.');
         }
 
-        // Menyiapkan folder penyimpanan foto
         $uploadPath = WRITEPATH . 'uploads/laporan';
 
         if (!is_dir($uploadPath)) {
@@ -88,7 +89,6 @@ class LaporanController extends BaseController
             }
         }
 
-        // Membuat nama foto secara acak
         $namaFoto = $foto->getRandomName();
 
         try {
@@ -101,14 +101,10 @@ class LaporanController extends BaseController
                 ->with('error', 'Foto gagal disimpan.');
         }
 
-        // Memulai transaksi database
         $db = \Config\Database::connect();
-
         $db->transBegin();
 
         try {
-
-            // Menyimpan data laporan
             $laporanId = $this->laporanModel->insert([
                 'user_id' => session()->get('user_id'),
                 'judul' => trim($this->request->getPost('judul')),
@@ -119,26 +115,21 @@ class LaporanController extends BaseController
             ]);
 
             if (!$laporanId) {
-                throw new \RuntimeException(
-                    'Gagal menyimpan data laporan.'
-                );
+                throw new \RuntimeException('Gagal menyimpan data laporan.');
             }
 
-            // Menyimpan koordinat dan nama lokasi
             $lokasiBerhasil = $this->lokasiModel->insert([
                 'laporan_id' => $laporanId,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'nama_lokasi' => $namaLokasi,
+                'akurasi_gps' => $akurasiGps,
             ]);
 
             if (!$lokasiBerhasil) {
-                throw new \RuntimeException(
-                    'Gagal menyimpan lokasi laporan.'
-                );
+                throw new \RuntimeException('Gagal menyimpan lokasi laporan.');
             }
 
-            // Menyimpan riwayat status awal
             $riwayatBerhasil = $this->riwayatModel->insert([
                 'laporan_id' => $laporanId,
                 'user_id' => session()->get('user_id'),
@@ -148,27 +139,15 @@ class LaporanController extends BaseController
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
 
-            if (!$riwayatBerhasil) {
-                throw new \RuntimeException(
-                    'Gagal menyimpan riwayat laporan.'
-                );
-            }
-
-            // Memastikan transaksi berhasil
-            if ($db->transStatus() === false) {
-                throw new \RuntimeException(
-                    'Transaksi database gagal.'
-                );
+            if (!$riwayatBerhasil || $db->transStatus() === false) {
+                throw new \RuntimeException('Transaksi database gagal.');
             }
 
             $db->transCommit();
 
         } catch (\Throwable $e) {
-
-            // Membatalkan transaksi jika terjadi kesalahan
             $db->transRollback();
 
-            // Menghapus foto jika penyimpanan database gagal
             $pathFoto = $uploadPath . DIRECTORY_SEPARATOR . $namaFoto;
 
             if (is_file($pathFoto)) {
@@ -182,7 +161,6 @@ class LaporanController extends BaseController
                 ->with('error', 'Laporan gagal disimpan. Silakan coba kembali.');
         }
 
-        // Jika berhasil
         return redirect()->to('/pelapor/dashboard')
             ->with('success', 'Laporan berhasil dikirim!');
     }

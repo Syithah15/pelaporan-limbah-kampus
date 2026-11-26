@@ -29,7 +29,6 @@
 
 <?= $this->endSection() ?>
 
-
 <?= $this->section('content') ?>
 
 <div class="container">
@@ -52,19 +51,21 @@
 
         <?php if (session()->getFlashdata('error')): ?>
             <div class="alert alert-danger">
-                <?= session()->getFlashdata('error') ?>
+                <?= esc(session()->getFlashdata('error')) ?>
             </div>
         <?php endif; ?>
 
         <?php if (session()->getFlashdata('success')): ?>
             <div class="alert alert-success">
-                <?= session()->getFlashdata('success') ?>
+                <?= esc(session()->getFlashdata('success')) ?>
             </div>
         <?php endif; ?>
 
-        <?php if (isset($validation)): ?>
+        <?php if (session()->getFlashdata('errors')): ?>
             <div class="alert alert-danger">
-                <?= $validation->listErrors() ?>
+                <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                    <div><?= esc($error) ?></div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
 
@@ -89,7 +90,7 @@
                        name="judul"
                        class="form-control"
                        placeholder="Contoh: Sampah menumpuk di depan kelas"
-                       value="<?= old('judul') ?>"
+                       value="<?= esc(old('judul') ?? '') ?>"
                        required
                        minlength="5"
                        maxlength="150">
@@ -130,7 +131,7 @@
                           rows="4"
                           placeholder="Jelaskan kondisi dan lokasi masalah..."
                           required
-                          minlength="10"><?= old('deskripsi') ?></textarea>
+                          minlength="10"><?= esc(old('deskripsi') ?? '') ?></textarea>
             </div>
 
             <div class="mb-4">
@@ -163,7 +164,6 @@
             <button type="button"
                     class="btn btn-success"
                     onclick="ambilLokasi()">
-
                 <i class="bi bi-crosshair me-1"></i>
                 Ambil Lokasi Saya
             </button>
@@ -186,27 +186,29 @@
                     <span id="latitudeTampil">-</span>
                 </div>
 
-                <div>
+                <div class="mb-2">
                     <strong>Longitude:</strong>
                     <span id="longitudeTampil">-</span>
                 </div>
 
+                <div>
+                    <strong>Akurasi GPS:</strong>
+                    <span id="akurasiTampil">Belum tersedia</span>
+                </div>
+
             </div>
 
-            <input type="hidden"
-                   name="latitude"
-                   id="latitude"
-                   value="<?= old('latitude') ?>">
+            <input type="hidden" name="latitude" id="latitude"
+                   value="<?= esc(old('latitude') ?? '') ?>">
 
-            <input type="hidden"
-                   name="longitude"
-                   id="longitude"
-                   value="<?= old('longitude') ?>">
+            <input type="hidden" name="longitude" id="longitude"
+                   value="<?= esc(old('longitude') ?? '') ?>">
 
-            <input type="hidden"
-                   name="nama_lokasi"
-                   id="nama_lokasi"
-                   value="<?= old('nama_lokasi') ?>">
+            <input type="hidden" name="nama_lokasi" id="nama_lokasi"
+                   value="<?= esc(old('nama_lokasi') ?? '') ?>">
+
+            <input type="hidden" name="akurasi_gps" id="akurasi_gps"
+                   value="<?= esc(old('akurasi_gps') ?? '') ?>">
 
             <div class="d-flex justify-content-end gap-2 mt-4">
 
@@ -229,29 +231,23 @@
 
 <?= $this->endSection() ?>
 
-
 <?= $this->section('scripts') ?>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- Memuat fungsi penyimpanan offline -->
 <script src="/offline-storage.js"></script>
-
-<!-- Memuat fungsi sinkronisasi otomatis -->
 <script src="/offline-sync.js"></script>
 
 <script>
     let marker;
-    let koordinatPeta = [-7.8, 110.4];
 
-    const map = L.map('map').setView(koordinatPeta, 13);
+    const map = L.map('map').setView([-7.8, 110.4], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
 
-    function tampilkanMarker(lat, lng) {
+    function tampilkanMarker(lat, lng, akurasi = '') {
 
         if (marker) {
             map.removeLayer(marker);
@@ -263,23 +259,29 @@
 
         marker.on('dragend', function (event) {
             const posisi = event.target.getLatLng();
-
-            aturLokasi(posisi.lat, posisi.lng);
+            aturLokasi(posisi.lat, posisi.lng, '');
         });
 
         map.setView([lat, lng], 17);
 
-        aturLokasi(lat, lng);
+        aturLokasi(lat, lng, akurasi);
     }
 
 
-    async function aturLokasi(lat, lng) {
+    async function aturLokasi(lat, lng, akurasi = '') {
 
         document.getElementById('latitude').value = lat;
         document.getElementById('longitude').value = lng;
 
         document.getElementById('latitudeTampil').textContent = lat;
         document.getElementById('longitudeTampil').textContent = lng;
+
+        document.getElementById('akurasi_gps').value = akurasi;
+
+        document.getElementById('akurasiTampil').textContent =
+            akurasi !== ''
+                ? Number(akurasi).toFixed(2) + ' meter'
+                : 'Tidak tersedia (lokasi manual)';
 
         document.getElementById('statusLokasi').textContent =
             'Koordinat lokasi berhasil dipilih.';
@@ -307,7 +309,6 @@
             const nama = data.display_name || 'Lokasi tidak diketahui';
 
             document.getElementById('nama_lokasi').value = nama;
-
             document.getElementById('namaLokasiTampil').textContent = nama;
 
         } catch (error) {
@@ -338,8 +339,9 @@
 
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
+                const akurasi = position.coords.accuracy;
 
-                tampilkanMarker(lat, lng);
+                tampilkanMarker(lat, lng, akurasi);
 
             },
 
@@ -361,25 +363,22 @@
 
 
     map.on('click', function (event) {
-
-        tampilkanMarker(
-            event.latlng.lat,
-            event.latlng.lng
-        );
-
+        tampilkanMarker(event.latlng.lat, event.latlng.lng, '');
     });
 
 
-    // Mengembalikan lokasi lama jika validasi server gagal
+    // Memulihkan lokasi lama setelah validasi gagal.
     const latitudeLama = document.getElementById('latitude').value;
     const longitudeLama = document.getElementById('longitude').value;
     const namaLokasiLama = document.getElementById('nama_lokasi').value;
+    const akurasiLama = document.getElementById('akurasi_gps').value;
 
     if (latitudeLama && longitudeLama) {
 
         tampilkanMarker(
             parseFloat(latitudeLama),
-            parseFloat(longitudeLama)
+            parseFloat(longitudeLama),
+            akurasiLama
         );
 
         if (namaLokasiLama) {
@@ -389,16 +388,11 @@
     }
 
 
-    // Informasi status koneksi
     function perbaruiStatusKoneksi() {
 
         const pesan = document.getElementById('pesanOffline');
 
-        if (!navigator.onLine) {
-            pesan.classList.remove('d-none');
-        } else {
-            pesan.classList.add('d-none');
-        }
+        pesan.classList.toggle('d-none', navigator.onLine === true);
     }
 
     window.addEventListener('online', perbaruiStatusKoneksi);
@@ -407,7 +401,7 @@
     perbaruiStatusKoneksi();
 
 
-    // Menyimpan laporan ketika pengguna sedang offline
+    // Penyimpanan laporan ketika offline.
     document.getElementById('formLaporan').addEventListener('submit', async function (event) {
 
         if (navigator.onLine) {
@@ -418,8 +412,11 @@
 
         const form = event.target;
         const tombol = document.getElementById('tombolKirim');
-
         const fileFoto = document.getElementById('foto').files[0];
+
+        if (!form.reportValidity()) {
+            return;
+        }
 
         if (!fileFoto) {
             alert('Silakan pilih foto laporan terlebih dahulu.');
@@ -433,9 +430,10 @@
 
         const latitude = document.getElementById('latitude').value;
         const longitude = document.getElementById('longitude').value;
+        const akurasi = document.getElementById('akurasi_gps').value;
 
         if (!latitude || !longitude) {
-            alert('Silakan tentukan lokasi laporan terlebih dahulu.');
+            alert('Silakan ambil lokasi GPS atau pilih titik pada peta.');
             return;
         }
 
@@ -451,7 +449,8 @@
                 foto: fileFoto,
                 latitude: latitude,
                 longitude: longitude,
-                nama_lokasi: document.getElementById('nama_lokasi').value
+                nama_lokasi: document.getElementById('nama_lokasi').value,
+                akurasi_gps: akurasi || null
             };
 
             const id = await simpanLaporanOffline(dataLaporan);
@@ -459,7 +458,7 @@
             alert(
                 'Laporan berhasil disimpan sementara di perangkat dengan nomor antrean ' +
                 id +
-                '. Laporan belum dikirim ke server. Laporan akan disinkronkan ketika internet tersedia dan halaman aplikasi dibuka.'
+                '. Laporan akan disinkronkan ketika internet tersedia dan halaman aplikasi dibuka.'
             );
 
             form.reset();

@@ -6,40 +6,25 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// Halaman login
+// HALAMAN LOGIN
 $routes->get('/', 'AuthController::index');
-
-// Proses login
 $routes->post('/login', 'AuthController::login');
+$routes->post('/logout', 'AuthController::logout');
 
-// Proses logout
-$routes->get('/logout', 'AuthController::logout');
-
-
-// ==========================================
-// DASHBOARD BERDASARKAN ROLE
-// ==========================================
-
-// Dashboard Pelapor
+// DASHBOARD
 $routes->get('/pelapor/dashboard', 'DashboardController::pelapor', [
     'filter' => 'role:pelapor'
 ]);
 
-// Dashboard Petugas
 $routes->get('/petugas/dashboard', 'DashboardController::petugas', [
     'filter' => 'role:petugas'
 ]);
 
-// Dashboard Admin
 $routes->get('/admin/dashboard', 'DashboardController::admin', [
     'filter' => 'role:admin'
 ]);
 
-
-// ==========================================
 // FITUR LAPORAN PELAPOR
-// ==========================================
-
 $routes->get('/pelapor/laporan/buat', 'LaporanController::create', [
     'filter' => 'role:pelapor'
 ]);
@@ -48,16 +33,11 @@ $routes->post('/pelapor/laporan/simpan', 'LaporanController::store', [
     'filter' => 'role:pelapor'
 ]);
 
-// Endpoint sinkronisasi laporan offline
 $routes->post('/pelapor/laporan/sinkronisasi', 'SinkronisasiController::simpan', [
     'filter' => 'role:pelapor'
 ]);
 
-
-// ==========================================
 // FITUR PETUGAS
-// ==========================================
-
 $routes->get('/petugas/laporan/detail/(:num)', 'PetugasController::detail/$1', [
     'filter' => 'role:petugas'
 ]);
@@ -82,11 +62,7 @@ $routes->post('/petugas/tugas/selesai/simpan/(:num)', 'TugasController::simpanSe
     'filter' => 'role:petugas'
 ]);
 
-
-// ==========================================
-// FITUR DETAIL LAPORAN PELAPOR
-// ==========================================
-
+// DETAIL LAPORAN PELAPOR
 $routes->get('/pelapor/laporan/detail/(:num)', 'PelaporController::detail/$1', [
     'filter' => 'role:pelapor'
 ]);
@@ -99,20 +75,16 @@ $routes->get('/pelapor/laporan/foto-tugas/(:num)/(:segment)', 'PelaporController
     'filter' => 'role:pelapor'
 ]);
 
+// NOTIFIKASI
+$routes->get('/notifikasi', 'NotifikasiController::index', [
+    'filter' => 'role:pelapor,petugas,admin'
+]);
 
-// ==========================================
-// FITUR NOTIFIKASI
-// ==========================================
+$routes->post('/notifikasi/baca/(:num)', 'NotifikasiController::baca/$1', [
+    'filter' => 'role:pelapor,petugas,admin'
+]);
 
-$routes->get('/notifikasi', 'NotifikasiController::index');
-
-$routes->post('/notifikasi/baca/(:num)', 'NotifikasiController::baca/$1');
-
-
-// ==========================================
 // FITUR ADMIN
-// ==========================================
-
 $routes->get('/admin/laporan', 'AdminController::laporan', [
     'filter' => 'role:admin'
 ]);
@@ -121,7 +93,9 @@ $routes->get('/admin/laporan/detail/(:num)', 'AdminController::detail/$1', [
     'filter' => 'role:admin'
 ]);
 
-$routes->get('/admin/laporan/foto/(:segment)', 'PetugasController::foto/$1');
+$routes->get('/admin/laporan/foto/(:segment)', 'PetugasController::foto/$1', [
+    'filter' => 'role:admin'
+]);
 
 $routes->post('/admin/laporan/batalkan/(:num)', 'AdminController::batalkan/$1', [
     'filter' => 'role:admin'

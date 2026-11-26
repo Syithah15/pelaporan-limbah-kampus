@@ -183,10 +183,13 @@ if ($userId) {
                             <?= esc($nama ?? 'Pengguna') ?>
                         </span>
 
-                        <a href="/logout" class="btn btn-outline-light btn-sm">
-                            <i class="bi bi-box-arrow-right me-1"></i>
-                            Keluar
-                        </a>
+                        <form action="/logout" method="post" class="m-0">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Keluar
+                            </button>
+                        </form>
 
                     </div>
 

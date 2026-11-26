@@ -3,6 +3,7 @@
 // ==========================================
 
 async function sinkronkanLaporanOffline() {
+
     // Pastikan browser sedang terhubung ke internet.
     if (!navigator.onLine) {
         return;
@@ -17,7 +18,7 @@ async function sinkronkanLaporanOffline() {
         return;
     }
 
-    // Ambil token CSRF dari input hidden pertama.
+    // Ambil token CSRF dari input hidden.
     const inputCsrf = form.querySelector(
         'input[type="hidden"][name]'
     );
@@ -28,6 +29,7 @@ async function sinkronkanLaporanOffline() {
     }
 
     try {
+
         // Ambil seluruh laporan yang tersimpan di IndexedDB.
         const daftarLaporan = await ambilLaporanOffline();
 
@@ -42,12 +44,13 @@ async function sinkronkanLaporanOffline() {
         );
 
         for (const laporan of daftarLaporan) {
-            // Jika koneksi terputus, hentikan proses.
+
             if (!navigator.onLine) {
                 break;
             }
 
             try {
+
                 const formData = new FormData();
 
                 formData.append('judul', laporan.judul);
@@ -55,18 +58,26 @@ async function sinkronkanLaporanOffline() {
                 formData.append('deskripsi', laporan.deskripsi);
                 formData.append('latitude', laporan.latitude);
                 formData.append('longitude', laporan.longitude);
+
                 formData.append(
                     'nama_lokasi',
                     laporan.nama_lokasi || ''
                 );
 
+                formData.append(
+                    'akurasi_gps',
+                    laporan.akurasi_gps ?? ''
+                );
+
                 // Sertakan foto laporan.
                 if (laporan.foto) {
+
                     formData.append(
                         'foto',
                         laporan.foto,
                         laporan.foto.name || 'foto-laporan.jpg'
                     );
+
                 }
 
                 // Sertakan token CSRF terbaru.
@@ -89,15 +100,14 @@ async function sinkronkanLaporanOffline() {
 
                 const hasil = await respons.json();
 
-                // Perbarui token CSRF jika server mengirim token baru.
+                // Perbarui token CSRF untuk pengiriman berikutnya.
                 if (hasil.csrfHash) {
                     inputCsrf.value = hasil.csrfHash;
                 }
 
-                // Jika laporan berhasil disimpan di server.
                 if (respons.ok && hasil.status === 'success') {
 
-                    // Hapus laporan dari penyimpanan offline.
+                    // Hapus laporan hanya setelah server berhasil menyimpan.
                     await hapusLaporanOffline(laporan.id);
 
                     console.log(
@@ -106,45 +116,56 @@ async function sinkronkanLaporanOffline() {
                     );
 
                 } else {
+
                     console.error(
                         'Sinkronisasi gagal:',
                         hasil.pesan || 'Terjadi kesalahan.'
                     );
 
-                    // Hentikan proses agar laporan tetap tersimpan.
                     break;
+
                 }
 
             } catch (error) {
+
                 console.error(
                     'Gagal mengirim laporan:',
                     error
                 );
 
-                // Jangan hapus laporan jika pengiriman gagal.
                 break;
+
             }
+
         }
 
-        // Periksa apakah masih ada laporan yang menunggu.
         const sisaLaporan = await ambilLaporanOffline();
 
         if (sisaLaporan.length === 0) {
-            console.log('Semua laporan offline berhasil disinkronkan.');
+
+            console.log(
+                'Semua laporan offline berhasil disinkronkan.'
+            );
+
         } else {
+
             console.log(
                 'Masih ada',
                 sisaLaporan.length,
                 'laporan yang menunggu sinkronisasi.'
             );
+
         }
 
     } catch (error) {
+
         console.error(
             'Gagal menjalankan sinkronisasi offline:',
             error
         );
+
     }
+
 }
 
 
@@ -153,9 +174,11 @@ async function sinkronkanLaporanOffline() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', function () {
+
     if (navigator.onLine) {
         sinkronkanLaporanOffline();
     }
+
 });
 
 
@@ -164,7 +187,9 @@ document.addEventListener('DOMContentLoaded', function () {
 // ==========================================
 
 window.addEventListener('online', function () {
+
     console.log('Internet kembali terhubung.');
 
     sinkronkanLaporanOffline();
+
 });
