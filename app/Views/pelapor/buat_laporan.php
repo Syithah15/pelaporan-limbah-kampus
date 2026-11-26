@@ -6,24 +6,80 @@
 
 <style>
     #map {
-        height: 350px;
+        height: 360px;
         width: 100%;
-        border-radius: 10px;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
         margin-top: 12px;
+        z-index: 1;
     }
 
     .form-card {
-        background: white;
-        padding: 25px;
+        background: #ffffff;
+        padding: 28px;
+        border-radius: 14px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-box {
+        background: #f8faf8;
+        border: 1px solid #e3ece5;
         border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        height: 100%;
+    }
+
+    .section-badge {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+    }
+
+    .upload-box {
+        background: #ffffff;
+        border: 1.5px dashed #adb5bd;
+        border-radius: 10px;
+        padding: 16px;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .upload-box:hover {
+        border-color: #198754;
+        background-color: #f8fcf9;
     }
 
     .location-info {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        padding: 16px;
+        border-radius: 10px;
+        margin-top: 14px;
+    }
+
+    .location-item {
         background: #f5f7f5;
-        padding: 15px;
         border-radius: 8px;
-        margin-top: 12px;
+        padding: 10px 12px;
+        height: 100%;
+    }
+
+    @media (max-width: 576px) {
+        .form-card {
+            padding: 18px;
+        }
+
+        .section-box {
+            padding: 15px;
+        }
+
+        #map {
+            height: 280px;
+        }
     }
 </style>
 
@@ -31,47 +87,64 @@
 
 <?= $this->section('content') ?>
 
-<div class="container">
+<div class="container-fluid px-lg-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">Buat Laporan</h3>
-            <p class="text-muted mb-0">
-                Laporkan masalah kebersihan di lingkungan kampus.
-            </p>
+    <div class="content-card mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-success-subtle text-success rounded-3 p-3 d-none d-sm-flex align-items-center justify-content-center">
+                    <i class="bi bi-plus-circle-fill fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-1">Buat Laporan Kebersihan</h3>
+                    <p class="text-muted mb-0">
+                        Laporkan masalah kebersihan di lingkungan kampus beserta foto kondisi dan titik lokasi.
+                    </p>
+                </div>
+            </div>
+
+            <a href="/pelapor/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Kembali ke Dashboard
+            </a>
         </div>
-
-        <a href="/pelapor/dashboard" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>
-            Kembali
-        </a>
     </div>
 
     <div class="form-card">
 
         <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger">
-                <?= esc(session()->getFlashdata('error')) ?>
+            <div class="alert alert-danger d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div><?= esc(session()->getFlashdata('error')) ?></div>
             </div>
         <?php endif; ?>
 
         <?php if (session()->getFlashdata('success')): ?>
-            <div class="alert alert-success">
-                <?= esc(session()->getFlashdata('success')) ?>
+            <div class="alert alert-success d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <div><?= esc(session()->getFlashdata('success')) ?></div>
             </div>
         <?php endif; ?>
 
         <?php if (session()->getFlashdata('errors')): ?>
             <div class="alert alert-danger">
-                <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                    <div><?= esc($error) ?></div>
-                <?php endforeach; ?>
+                <div class="fw-semibold mb-1">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i>
+                    Periksa kembali isian formulir berikut:
+                </div>
+                <ul class="mb-0 ps-3">
+                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                        <li><?= esc($error) ?></li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         <?php endif; ?>
 
-        <div id="pesanOffline" class="alert alert-info d-none">
-            <i class="bi bi-wifi-off me-2"></i>
-            Kamu sedang offline. Laporan akan disimpan sementara di perangkat.
+        <div id="pesanOffline" class="alert alert-info d-none d-flex align-items-center gap-2">
+            <i class="bi bi-wifi-off fs-5"></i>
+            <div>
+                Kamu sedang offline. Laporan akan disimpan sementara di perangkat dan disinkronkan otomatis saat online.
+            </div>
         </div>
 
         <div id="pesanSinkronisasi" class="alert alert-success d-none"></div>
@@ -83,117 +156,175 @@
 
             <?= csrf_field() ?>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Judul Laporan</label>
+            <div class="row g-4">
 
-                <input type="text"
-                       name="judul"
-                       class="form-control"
-                       placeholder="Contoh: Sampah menumpuk di depan kelas"
-                       value="<?= esc(old('judul') ?? '') ?>"
-                       required
-                       minlength="5"
-                       maxlength="150">
-            </div>
+                <!-- Kolom Kiri: Detail & Bukti Foto Laporan -->
+                <div class="col-lg-6">
+                    <div class="section-box">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="section-badge bg-success-subtle text-success">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0">Informasi Laporan</h5>
+                                <small class="text-muted">Lengkapi detail masalah dan unggah foto kondisi.</small>
+                            </div>
+                        </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Kategori</label>
+                        <hr class="mt-2 mb-3">
 
-                <select name="kategori" class="form-select" required>
-                    <option value="">-- Pilih Kategori --</option>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-card-heading text-success me-1"></i>
+                                Judul Laporan <span class="text-danger">*</span>
+                            </label>
 
-                    <?php
-                    $kategoriPilihan = [
-                        'Sampah',
-                        'Saluran Air',
-                        'Toilet',
-                        'Ruang Kelas',
-                        'Lingkungan',
-                        'Lainnya'
-                    ];
-                    ?>
+                            <input type="text"
+                                   name="judul"
+                                   class="form-control"
+                                   placeholder="Contoh: Sampah menumpuk di depan kelas"
+                                   value="<?= esc(old('judul') ?? '') ?>"
+                                   required
+                                   minlength="5"
+                                   maxlength="150">
+                            <div class="form-text">Minimal 5 karakter, maksimal 150 karakter.</div>
+                        </div>
 
-                    <?php foreach ($kategoriPilihan as $kategori): ?>
-                        <option value="<?= esc($kategori) ?>"
-                            <?= old('kategori') === $kategori ? 'selected' : '' ?>>
-                            <?= esc($kategori) ?>
-                        </option>
-                    <?php endforeach; ?>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-tags text-success me-1"></i>
+                                Kategori <span class="text-danger">*</span>
+                            </label>
 
-                </select>
-            </div>
+                            <select name="kategori" class="form-select" required>
+                                <option value="">-- Pilih Kategori --</option>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Deskripsi</label>
+                                <?php
+                                $kategoriPilihan = [
+                                    'Sampah',
+                                    'Saluran Air',
+                                    'Toilet',
+                                    'Ruang Kelas',
+                                    'Lingkungan',
+                                    'Lainnya'
+                                ];
+                                ?>
 
-                <textarea name="deskripsi"
-                          class="form-control"
-                          rows="4"
-                          placeholder="Jelaskan kondisi dan lokasi masalah..."
-                          required
-                          minlength="10"><?= esc(old('deskripsi') ?? '') ?></textarea>
-            </div>
+                                <?php foreach ($kategoriPilihan as $kategori): ?>
+                                    <option value="<?= esc($kategori) ?>"
+                                        <?= old('kategori') === $kategori ? 'selected' : '' ?>>
+                                        <?= esc($kategori) ?>
+                                    </option>
+                                <?php endforeach; ?>
 
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Foto Kondisi</label>
+                            </select>
+                        </div>
 
-                <input type="file"
-                       name="foto"
-                       id="foto"
-                       class="form-control"
-                       accept="image/jpeg,image/png,image/webp"
-                       capture="environment"
-                       required>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-text-paragraph text-success me-1"></i>
+                                Deskripsi Kondisi <span class="text-danger">*</span>
+                            </label>
 
-                <small class="text-muted">
-                    Gunakan foto JPG, PNG, atau WEBP dengan ukuran maksimal 2 MB.
-                </small>
-            </div>
+                            <textarea name="deskripsi"
+                                      class="form-control"
+                                      rows="5"
+                                      placeholder="Jelaskan kondisi kebersihan, tingkat keparahan, dan patokan lokasi..."
+                                      required
+                                      minlength="10"><?= esc(old('deskripsi') ?? '') ?></textarea>
+                            <div class="form-text">Tuliskan penjelasan minimal 10 karakter agar petugas mudah menindaklanjuti.</div>
+                        </div>
 
-            <hr>
+                        <div class="mb-0">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-camera text-success me-1"></i>
+                                Foto Kondisi <span class="text-danger">*</span>
+                            </label>
 
-            <h5 class="fw-bold mb-2">
-                <i class="bi bi-geo-alt me-2"></i>
-                Lokasi Laporan
-            </h5>
+                            <div class="upload-box">
+                                <input type="file"
+                                       name="foto"
+                                       id="foto"
+                                       class="form-control"
+                                       accept="image/jpeg,image/png,image/webp"
+                                       capture="environment"
+                                       required>
 
-            <p class="text-muted">
-                Gunakan GPS atau pilih titik lokasi langsung pada peta.
-            </p>
-
-            <button type="button"
-                    class="btn btn-success"
-                    onclick="ambilLokasi()">
-                <i class="bi bi-crosshair me-1"></i>
-                Ambil Lokasi Saya
-            </button>
-
-            <div id="statusLokasi" class="small text-muted mt-2">
-                Lokasi belum dipilih.
-            </div>
-
-            <div id="map"></div>
-
-            <div class="location-info">
-
-                <div class="mb-2">
-                    <strong>Nama Lokasi:</strong>
-                    <span id="namaLokasiTampil">Belum diketahui</span>
+                                <div class="d-flex align-items-center gap-2 mt-2 text-muted small">
+                                    <i class="bi bi-info-circle text-success"></i>
+                                    <span>Gunakan foto JPG, PNG, atau WEBP dengan ukuran maksimal 2 MB.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-2">
-                    <strong>Latitude:</strong>
-                    <span id="latitudeTampil">-</span>
-                </div>
+                <!-- Kolom Kanan: Pengambilan Lokasi & Peta -->
+                <div class="col-lg-6">
+                    <div class="section-box">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="section-badge bg-success-subtle text-success">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </span>
+                                <div>
+                                    <h5 class="fw-bold mb-0">Lokasi Laporan</h5>
+                                    <small class="text-muted">Gunakan GPS atau klik langsung titik pada peta.</small>
+                                </div>
+                            </div>
 
-                <div class="mb-2">
-                    <strong>Longitude:</strong>
-                    <span id="longitudeTampil">-</span>
-                </div>
+                            <button type="button"
+                                    class="btn btn-success btn-sm px-3 py-2"
+                                    onclick="ambilLokasi()">
+                                <i class="bi bi-crosshair me-1"></i>
+                                Ambil Lokasi Saya
+                            </button>
+                        </div>
 
-                <div>
-                    <strong>Akurasi GPS:</strong>
-                    <span id="akurasiTampil">Belum tersedia</span>
+                        <hr class="mt-2 mb-3">
+
+                        <div id="statusLokasi" class="small text-muted bg-white border rounded-2 px-3 py-2">
+                            <i class="bi bi-pin-map me-1 text-success"></i>
+                            Lokasi belum dipilih.
+                        </div>
+
+                        <div id="map"></div>
+
+                        <div class="location-info">
+                            <div class="row g-2 small">
+                                <div class="col-12">
+                                    <div class="location-item">
+                                        <div class="text-muted fw-semibold mb-1">
+                                            <i class="bi bi-signpost-2 text-success me-1"></i>
+                                            Nama Lokasi
+                                        </div>
+                                        <div id="namaLokasiTampil" class="fw-medium text-dark">Belum diketahui</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="location-item">
+                                        <div class="text-muted fw-semibold mb-1">Latitude</div>
+                                        <div id="latitudeTampil" class="fw-medium text-dark text-break">-</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="location-item">
+                                        <div class="text-muted fw-semibold mb-1">Longitude</div>
+                                        <div id="longitudeTampil" class="fw-medium text-dark text-break">-</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="location-item">
+                                        <div class="text-muted fw-semibold mb-1">Akurasi GPS</div>
+                                        <div id="akurasiTampil" class="fw-medium text-dark">Belum tersedia</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -210,17 +341,25 @@
             <input type="hidden" name="akurasi_gps" id="akurasi_gps"
                    value="<?= esc(old('akurasi_gps') ?? '') ?>">
 
-            <div class="d-flex justify-content-end gap-2 mt-4">
+            <hr class="my-4">
 
-                <a href="/pelapor/dashboard" class="btn btn-outline-secondary">
-                    Batal
-                </a>
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                <small class="text-muted">
+                    <i class="bi bi-shield-check text-success me-1"></i>
+                    Pastikan foto dan titik lokasi sudah sesuai sebelum mengirim laporan.
+                </small>
 
-                <button type="submit" class="btn btn-success" id="tombolKirim">
-                    <i class="bi bi-send me-1"></i>
-                    Kirim Laporan
-                </button>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/pelapor/dashboard" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Batal
+                    </a>
 
+                    <button type="submit" class="btn btn-success px-4" id="tombolKirim">
+                        <i class="bi bi-send me-1"></i>
+                        Kirim Laporan
+                    </button>
+                </div>
             </div>
 
         </form>
