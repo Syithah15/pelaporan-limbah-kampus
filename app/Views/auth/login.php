@@ -70,132 +70,138 @@
             color: white;
         }
     
-
 body {
     min-height: 100vh;
     min-height: 100dvh;
     margin: 0;
-    padding: 24px 16px;
+    padding: 20px 12px;
     background: #f5f5f5;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     font-family: Arial, sans-serif;
 }
 
-/* Container halaman login */
+/* Kartu login */
 .login-card {
     width: 100%;
-    max-width: 390px;
-    min-height: 844px;
+    max-width: 420px;
+    min-height: 0;
+    height: auto;
     padding: 0;
     background: #ffffff;
-    border-radius: 0;
+    border-radius: 18px;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    display: block;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
 }
 
 /* Header hijau EcoCampus */
 .login-card > .text-center:first-child {
-    height: 415px;
-    flex-shrink: 0;
+    height: auto;
+    min-height: 170px;
     background: #198754;
     color: white;
+    padding: 22px 20px 36px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px 20px 45px;
 }
 
 /* Lingkaran logo */
 .login-card .logo {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
+    width: 58px;
+    height: 58px;
     background: white;
     color: #198754;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 38px;
-    margin: 0 auto 20px;
+    border-radius: 50%;
+    font-size: 27px;
+    margin: 0 auto 10px;
 }
 
-/* Judul aplikasi */
+/* Judul EcoCampus */
 .login-card .login-title {
     color: white;
-    font-size: 30px;
+    font-size: 23px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 /* Slogan */
 .login-card > .text-center:first-child p {
     color: #e6f5ec !important;
-    font-size: 15px;
+    font-size: 13px;
     margin-bottom: 0 !important;
 }
 
-/* Area formulir putih */
+/* Formulir putih */
 .login-card form {
-    background: #ffffff;
-    border-radius: 32px 32px 0 0;
-    margin-top: -32px;
-    padding: 36px 28px 12px;
     position: relative;
     z-index: 1;
+    background: white;
+    margin-top: -22px;
+    padding: 22px 26px 8px;
+    border-radius: 24px 24px 0 0;
 }
 
 /* Teks sambutan */
 .login-intro h2 {
     color: #183c30;
-    font-size: 27px;
+    font-size: 22px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .login-intro p {
     color: #587365;
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 16px;
+}
+
+/* Jarak antarkolom */
+.login-card .mb-3 {
+    margin-bottom: 12px !important;
+}
+
+.login-card .mb-4 {
+    margin-bottom: 16px !important;
 }
 
 /* Label */
 .login-card .form-label {
     color: #183c30;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+    margin-bottom: 6px;
 }
 
-/* Input email dan password */
+/* Input */
 .login-card .form-control {
-    min-height: 54px;
+    min-height: 44px;
+    padding: 9px 12px;
     background: #f1faf4;
     border: 1px solid #cce5d4;
-    border-radius: 14px;
-    padding: 12px 16px;
+    border-radius: 11px;
     font-size: 14px;
 }
 
 .login-card .form-control:focus {
-    background: #ffffff;
+    background: white;
     border-color: #198754;
     box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12);
 }
 
-/* Tombol Login */
+/* Tombol login */
 .login-card .btn-login {
     width: 100%;
-    min-height: 54px;
+    min-height: 46px;
     background: #198754;
     color: white;
     border: none;
-    border-radius: 14px;
-    font-size: 16px;
+    border-radius: 12px;
+    font-size: 15px;
     font-weight: 600;
 }
 
@@ -207,24 +213,24 @@ body {
 /* Footer */
 .login-card > .text-center.mt-4 {
     margin-top: 0 !important;
-    padding: 12px 20px 24px;
+    padding: 10px 16px 16px;
 }
 
 /* Responsivitas */
-@media (max-width: 430px) {
+@media (max-width: 480px) {
     body {
-        padding: 0;
+        padding: 12px;
+        align-items: flex-start;
     }
 
     .login-card {
         max-width: 100%;
-        min-height: 100dvh;
-        box-shadow: none;
+        min-height: 0;
+        height: auto;
     }
 
     .login-card form {
-        padding-left: 28px;
-        padding-right: 28px;
+        padding: 20px 22px 8px;
     }
 }
 </style>
