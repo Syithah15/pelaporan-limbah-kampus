@@ -104,3 +104,22 @@ $routes->post('/admin/laporan/batalkan/(:num)', 'AdminController::batalkan/$1', 
 $routes->get('/admin/peta-laporan', 'AdminController::peta', [
     'filter' => 'role:admin'
 ]);
+
+
+// === [START: MODUL 5 - REINALDI (ADMIN: RINGKASAN, PETA & PETUGAS)] ===
+$routes->get('/admin/ringkasan', 'AdminRingkasanController::index', [
+    'filter' => 'role:admin'
+]);
+
+$routes->get('/admin/dashboard-ringkasan', 'AdminRingkasanController::index', [
+    'filter' => 'role:admin'
+]);
+
+$routes->get('/admin/peta-sebaran', 'PetaSebaranController::index', [
+    'filter' => 'role:admin'
+]);
+
+$routes->get('/admin/monitoring-petugas', 'MonitoringPetugasController::index', [
+    'filter' => 'role:admin'
+]);
+// === [END: MODUL 5] ===
