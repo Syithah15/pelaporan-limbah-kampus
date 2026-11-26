@@ -2,10 +2,11 @@
 
 <?= $this->section('content') ?>
 
-<div class="container-fluid">
+<div class="container-fluid dashboard-redesign">
+    
 
     <!-- Header Dashboard -->
-    <div class="content-card mb-4">
+    <div class="content-card mb-4 dashboard-hero">
         <h3 class="fw-bold mb-2">
             <?= esc($judul) ?>
         </h3>
